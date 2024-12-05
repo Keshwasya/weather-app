@@ -17,14 +17,25 @@ data = response.json()
 if data.get("cod") != 200:
     print("City not found or invalid API key.")
 else:
-    temperature = data["main"]["temp"]
-    weather_description = data["weather"][0]["description"]
     city_name = data["name"]
+    temperature = data["main"]["temp"]
+    temperature_celsius = temperature - 273.15 # Kelvin to Celsius
+    weather_description = data["weather"][0]["description"]
+    humidity = data["main"]["humidity"]
+    wind_speed = data["wind"]["speed"]
+    
+    # Convert sunrise/sunset to readable format
+    sunrise = datetime.datetime.fromtimestamp(data["sys"]["sunrise"]).strftime('%H:%M:%S')
+    sunset = datetime.datetime.fromtimestamp(data["sys"]["sunset"]).strftime('%H:%M:%S')
 
-    """Convert temp from Kelvin to Celsius"""
-    temperature_celsius = temperature - 273.15
+    # Convert m/s to km/h
+    wind_speed_kmh = wind_speed * 3.6  
 
+    # Print the weather information
     print(f"City: {city_name}")
-    print(f"Temperature: {temperature_celsius:.2f}°C")
+    print(f"Temperature: {temperature:.2f}°C")
     print(f"Weather: {weather_description}")
-    print("")
+    print(f"Humidity: {humidity}%")
+    print(f"Wind Speed: {wind_speed_kmh:.2f} km/h")
+    print(f"Sunrise: {sunrise}")
+    print(f"Sunset: {sunset}")
