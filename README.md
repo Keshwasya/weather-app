@@ -17,6 +17,7 @@ https://github.com/Keshwasya/weather-app.git
 2. Install dependencies:
 pip install requests
 pip install python-dotenv
+pip install PyQt5
 
 3. Run the app:
 python weather_app.py

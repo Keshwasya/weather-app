@@ -1,45 +1,69 @@
 import requests
 import os
-import datetime
 from dotenv import load_dotenv
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QLineEdit, QPushButton, QWidget
 
 # Load environment variables from the .env file
 load_dotenv()
 
-
+# Get the API key from the .env file
 api_key = os.getenv("API_KEY")
-city = input("Enter city name: ")
-url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
 
+class WeatherApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Weather App")
+        self.setGeometry(100, 100, 400, 200)
 
-response = requests.get(url)
-data = response.json()
+        # Create layout and widgets
+        layout = QVBoxLayout()
 
-if data.get("cod") != 200:
-    print("City not found or invalid API key.")
-else:
-    sunrise_unix = data["sys"]["sunrise"]
-    sunset_unix = data["sys"]["sunset"]
-    city_name = data["name"]
-    temperature = data["main"]["temp"]
-    temperature_celsius = temperature - 273.15 # Kelvin to Celsius
-    temperature_fahrenheit = (temperature - 273.15) * 9/5 + 32 # Kelvin to Fahrenheit
-    weather_description = data["weather"][0]["description"]
-    humidity = data["main"]["humidity"]
-    wind_speed = data["wind"]["speed"]
-    
-    # Convert sunrise/sunset to readable format
-    sunrise = datetime.datetime.fromtimestamp(data["sys"]["sunrise"]).strftime('%H:%M:%S')
-    sunset = datetime.datetime.fromtimestamp(data["sys"]["sunset"]).strftime('%H:%M:%S')
+        self.city_label = QLabel("Enter City Name:")
+        layout.addWidget(self.city_label)
 
-    # Convert m/s to km/h
-    wind_speed_kmh = wind_speed * 3.6  
+        self.city_input = QLineEdit()
+        layout.addWidget(self.city_input)
 
-    # Print the weather information
-    print(f"City: {city_name}")
-    print(f"Temperature: {temperature:.2f}°C")
-    print(f"Weather: {weather_description}")
-    print(f"Humidity: {humidity}%")
-    print(f"Wind Speed: {wind_speed_kmh:.2f} km/h")
-    print(f"Sunrise: {sunrise}")
-    print(f"Sunset: {sunset}")
+        self.search_button = QPushButton("Get Weather")
+        layout.addWidget(self.search_button)
+
+        self.result_label = QLabel("")
+        layout.addWidget(self.result_label)
+
+        # Set layout for the central widget
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+        # Connect button to the function
+        self.search_button.clicked.connect(self.get_weather)
+
+    def get_weather(self):
+        city = self.city_input.text()
+        if city:
+            weather_info = self.fetch_weather(city)
+            self.result_label.setText(weather_info)
+        else:
+            self.result_label.setText("Please enter a city name.")
+
+    def fetch_weather(self, city):
+        url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            if data.get("cod") != 200:
+                return "City not found!"
+
+            # Extract weather details
+            temperature = data["main"]["temp"] - 273.15  # Convert Kelvin to Celsius
+            weather_description = data["weather"][0]["description"]
+            return f"Temperature: {temperature:.2f}°C\nWeather: {weather_description}"
+        except Exception as e:
+            return "Failed to fetch weather data."
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = WeatherApp()
+    window.show()
+    sys.exit(app.exec_())
